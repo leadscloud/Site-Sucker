@@ -24,44 +24,37 @@ def get_html(url,folder):
     f.write(data)
     f.close()
 
-def get_js():
-    js = tree.xpath('//script[@type="text/javascript"]')
-    if len(js) > 0:
-        href_js = js[0].attrib['src']
-        href_js_split = href_js.split("/")
-        
-        if os.path.isdir(folder+"/" + href_js_split[0]) == False:
-            os.mkdir(folder+"/"+ href_js_split[0], 0755 );
-        for data in js:
-            src = data.attrib['src']
-            fileNameJs = src.split("/")
-            filePathJs = str(url) + "/" + str(data.attrib['src'])
-            u = urllib.urlopen(filePathJs)
+def suck(rules,typeF):
+    fObject = tree.xpath(rules)
+    if len(fObject) > 0:
+       
+        for data in fObject:
+            
+            href = data.attrib[typeF]
+            all_path = href.split("/")
+            index = len(all_path) - 1
+            path_fObject = ""
+            for data in range(0, index):
+                path_fObject = path_fObject + all_path[data] +"/"
+
+            if os.path.isdir(folder+"/"+path_fObject) == False:
+                os.makedirs(folder+"/"+path_fObject, 0755 );
+
+            print path_fObject + all_path[index]   
+                       
+            u = urllib.urlopen(str(url) + path_fObject + all_path[index])
             data = u.read()
-            f = open(folder + '/'+ href_js_split[0]+'/'+ fileNameJs[1], 'wb')
+            f = open(folder + '/'+path_fObject+ all_path[index], 'wb')
             f.write(data)
             f.close()
 
-def get_css():
-    css = tree.xpath('//link[@type="text/css"]')
-    if len(css) > 0:
-        href_css = css[0].attrib['href']
-        href_css_split = href_css.split("/")
-        if os.path.isdir(folder+"/"+href_css_split[0]) == False:
-            os.mkdir(folder+"/"+href_css_split[0], 0755 );
-        for data in css:
-            src = data.attrib['href']
-            fileNameCss = src.split("/")
-            filePathCss = str(url) + "/" + str(data.attrib['href'])
-            if fileNameCss[0] == "css": 
-                u = urllib.urlopen(filePathCss)
-                data = u.read()
-                f = open(folder + '/'+href_css_split[0]+'/'+ fileNameCss[1], 'wb')
-                f.write(data)
-                f.close()
+print "Выполняется..."
 
-print "Выполняеться..."
 get_html(url,folder)
-get_js()
-get_css()
+#suck js
+suck('//script[contains(@src, "/")][not(contains(@src, "http://"))][not(contains(@src, "//"))]', 'src')
+#suck css
+suck('//link[not(contains(@href, "http://"))][not(contains(@href, "//"))]','href')
+#suck img
+suck('//img[not(contains(@src, "http://"))][not(contains(@src, "//"))]','src')
 print "Выполнено!"

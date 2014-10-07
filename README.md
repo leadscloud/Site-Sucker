@@ -1,12 +1,22 @@
 "Site Sucker" ver 0.5 python 2.7
-create by Alexey Sysoev, SI Studio
+created by Alexey Sysoev, SI Studio
 
-now can:
+enter url like this http://sistdTest.com/, 
+not like this http://sistdTest.com/index.html 
+or this http://sistdTest.com/index.php.   
+
+This problem will be solved in next versions.
+
+what program does:
 - download main index
 - download all css
 - download all js
+- download all image
+
 
 what to do:
 - donwload all pages
 - download all fonts
-- download all css
+- download images from css
+
+for all questions, write to info@sistd.com
