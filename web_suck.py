@@ -24,6 +24,23 @@ def get_html(url,folder):
 
     connection = urllib.urlopen(url)
     dom =  lxml.html.fromstring(connection.read())
+
+
+    u = urllib.urlopen(url)
+    data = u.read()
+    data = data.replace(url, '')
+    f = open(folder+ "/index.html", 'wb')
+    f.write(data)
+    f.close()
+    with open(log, 'a') as file:
+        file.write("Create page: "+folder+"/index.html\n\n")
+    page = requests.get(url)
+    tree = html.fromstring(page.text)        
+    suck('//script', 'src','js',page,tree)
+    suck('//link[(contains(@href, ".css"))]','href','css',page,tree)
+    suck('//img','src', 'img',page,tree)
+    suck('//div[(contains(@style, "url"))]','url', 'bimg',page,tree)
+
     
     for link in dom.xpath('//a/@href'):
         if link.find('html')!=-1:
@@ -99,9 +116,9 @@ def suck(rules,typeF, typeS,page,tree):
                     u = urllib.urlopen(str(url) + path_fObject + all_path[index])
                     data = u.read()
                     css_comments_removed = re.sub(r'\/\*.*?\*\/', '', data)
+                    css_comments_removed = re.sub('"', '', css_comments_removed)
                     pattern = re.compile(r"url\('?(.*?\.[a-z]{3})")
                     matches = pattern.findall(css_comments_removed)  
-                    
                     for i in matches:
                         i = i.replace("'", "")
                         valS = i.split("/")
