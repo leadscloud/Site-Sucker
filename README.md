@@ -3,7 +3,7 @@ created by Alexey Sysoev, SI Studio
 
 
 what program does:
-- download main index
+- download index files
 - download all css
 - download all js
 - download all image
