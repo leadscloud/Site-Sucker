@@ -4,24 +4,73 @@ import urllib
 import os, sys
 import re
 import lxml.html
-
+from Tkinter import *
 global tree,folder,url,log
 
-url = raw_input("Enter web page to suck: ")
-folder = raw_input("Enter folder where to suck: ")
 
-if os.path.isdir(folder) == False:
-    os.mkdir( folder, 0755 )
-    log = folder+'/stat.log'
-    f = open(log, 'wb')
-    with open(log, 'a') as file:
-        file.write('Folder "' + folder +  '" created\n')
-else:
-    with open(log, 'a') as file:
-        file.write('Such folder exist\n')
+root = Tk()
+root.geometry("400x300")
+namel = Label(root, text="SITE SUCKER", font="Arial 18")
+namel.pack()
+lab = Label(root, text="Please, enter url", font="Arial 14")
+lab.pack()
+text1=Text(root,height=1,width=20,font='Arial 14',wrap=WORD)
+text1.pack()
+lab1 = Label(root, text="Plese, enter folder name", font="Arial 14")
+lab1.pack()
+
+text2=Text(root,height=1,width=20,font='Arial 14',wrap=WORD)
+text2.pack()
+def Submit(event):
+    if text1.get('1.0', END+'-1c') == "":
+        T.delete('1.0', END)  
+        T.insert('1.0', "Enter URL!")
+    elif text2.get('1.0', END+'-1c') == "":
+        T.delete('1.0', END)  
+        T.insert('1.0', "Enter Folder!")
+    else:
+        T.delete('1.0', END)
+        url = text1.get('1.0', END+'-1c')
+        folder = text2.get('1.0', END+'-1c')
+
+        if (os.path.isdir(folder) == False) and (os.path.isfile(folder+"/stat.log") == False):
+            os.mkdir( folder, 0755 )
+            log = folder+'/stat.log'
+            f = open(log, 'wb')
+            with open(log, 'a') as file:
+                file.write('WEBPAGE: "' + url +  '"\n')
+                file.write('Folder "' + folder +  '" created\n')
+            try:
+                T.insert('1.0', 'Working...\n\n')
+                get_html(str(url),str(folder),log)
+                T.insert(END, 'Done!')
+            except Exception as e:
+                T.insert(END, str(e) +"\nProgram Stop!")
+                file.write('ERROR! Program dont finish.\n "' + str(e))
+        else:
+            T.insert(END, 'Such folder exist!\n')
+
+
+btn = Button(root,                  
+             text="SUCK ME",       
+             width=10,height=2,     
+             bg="white",fg="black") 
+btn.bind("<Button-1>", Submit)
+
+S = Scrollbar(root)
+T = Text(root, height=4, width=50,yscrollcommand = S.set)
+S.pack(side=LEFT, fill=Y)
+T.pack(side=BOTTOM, fill=Y)
+S.config(command=T.yview)
+T.config(yscrollcommand=S.set)
+btn.pack()
+
+
+
+
  
-def get_html(url,folder):
-
+def get_html(url,folder,log):
+    root.update()
     connection = urllib.urlopen(url)
     dom =  lxml.html.fromstring(connection.read())
 
@@ -36,10 +85,10 @@ def get_html(url,folder):
         file.write("Create page: "+folder+"/index.html\n\n")
     page = requests.get(url)
     tree = html.fromstring(page.text)        
-    suck('//script', 'src','js',page,tree)
-    suck('//link[(contains(@href, ".css"))]','href','css',page,tree)
-    suck('//img','src', 'img',page,tree)
-    suck('//div[(contains(@style, "url"))]','url', 'bimg',page,tree)
+    suck('//script', 'src','js',page,tree,url,folder,log,root)
+    suck('//link[(contains(@href, ".css"))]','href','css',page,tree,url,folder,log,root)
+    suck('//img','src', 'img',page,tree,url,folder,log,root)
+    suck('//div[(contains(@style, "url"))]','url', 'bimg',page,tree,url,folder,log,root)
 
     
     for link in dom.xpath('//a/@href'):
@@ -56,19 +105,19 @@ def get_html(url,folder):
                 page = requests.get(url+link)
                 tree = html.fromstring(page.text)
                 #suck js
-                suck('//script', 'src','js',page,tree)
+                suck('//script', 'src','js',page,tree,url,folder,log,root)
                 #suck css
-                suck('//link[(contains(@href, ".css"))]','href','css',page,tree)
+                suck('//link[(contains(@href, ".css"))]','href','css',page,tree,url,folder,log,root)
                 #suck img
-                suck('//img','src', 'img',page,tree)
+                suck('//img','src', 'img',page,tree,url,folder,log,root)
                 #suck bimg
-                suck('//div[(contains(@style, "url"))]','url', 'bimg',page,tree)
+                suck('//div[(contains(@style, "url"))]','url', 'bimg',page,tree,url,folder,log,root)
 
-def suck(rules,typeF, typeS,page,tree):
+def suck(rules,typeF, typeS,page,tree,url,folder,log,root):
     fObject = tree.xpath(rules)
     if len(fObject) > 0:
         for data in fObject:
-           
+            root.update()
             obs = data.attrib
             if (typeF in obs) or (typeS == "bimg"):
                 if (typeF in obs):
@@ -148,7 +197,7 @@ def suck(rules,typeF, typeS,page,tree):
                             if os.path.isfile(folder+"/"+full_image) == False:
                                 with open(log, 'a') as file:
                                     file.write("|--->" + full_image+"\n")
-                                
+                                   
                                 ind = len(full_image.split("/")) - 1
                                 path_fObject = ""
                                 for data in range(0, ind):
@@ -161,8 +210,5 @@ def suck(rules,typeF, typeS,page,tree):
                                 f.write(data)
                                 f.close()
                         
-print "Working, wait..."
 
-get_html(url,folder)
-
-print "Done!"
+root.mainloop()
